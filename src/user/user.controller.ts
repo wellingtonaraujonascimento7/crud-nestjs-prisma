@@ -7,11 +7,15 @@ import {
     Param,
     Delete,
     ParseIntPipe,
+    UsePipes,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { Public } from 'src/auth/decorators/public.decorator';
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import { createUserSchema } from './dto/create-user.schema';
+import { updateUserSchema } from './dto/update-user.schema';
+import type { CreateUserDto } from './dto/create-user.schema';
+import type { UpdateUserDto } from './dto/update-user.schema';
 
 @Controller('users')
 export class UserController {
@@ -19,6 +23,7 @@ export class UserController {
 
     @Public()
     @Post()
+    @UsePipes(new ZodValidationPipe(createUserSchema))
     create(@Body() createUserDto: CreateUserDto) {
         return this.userService.create(createUserDto);
     }
@@ -34,6 +39,7 @@ export class UserController {
     }
 
     @Patch(':id')
+    @UsePipes(new ZodValidationPipe(updateUserSchema))
     update(
         @Param('id', ParseIntPipe) id: number,
         @Body() updateUserDto: UpdateUserDto,
