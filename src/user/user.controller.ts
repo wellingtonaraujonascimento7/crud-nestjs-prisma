@@ -1,14 +1,4 @@
-import {
-    Controller,
-    Get,
-    Post,
-    Body,
-    Patch,
-    Param,
-    Delete,
-    ParseIntPipe,
-    UsePipes,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Delete } from '@nestjs/common';
 import { UserService } from './user.service';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
@@ -16,6 +6,8 @@ import { createUserSchema } from './dto/create-user.schema';
 import { updateUserSchema } from './dto/update-user.schema';
 import type { CreateUserDto } from './dto/create-user.schema';
 import type { UpdateUserDto } from './dto/update-user.schema';
+import { UserId } from 'src/auth/decorators/user-id.decorator';
+import { ResponseUserDto } from './dto/reponse-user.dto';
 
 @Controller('users')
 export class UserController {
@@ -23,32 +15,34 @@ export class UserController {
 
     @Public()
     @Post()
-    @UsePipes(new ZodValidationPipe(createUserSchema))
-    create(@Body() createUserDto: CreateUserDto) {
+    create(
+        @Body(new ZodValidationPipe(createUserSchema))
+        createUserDto: CreateUserDto,
+    ): Promise<ResponseUserDto> {
         return this.userService.create(createUserDto);
     }
 
     @Get()
-    findAll() {
+    findAll(): Promise<ResponseUserDto[]> {
         return this.userService.findAll();
     }
 
-    @Get(':id')
-    findOne(@Param('id', ParseIntPipe) id: number) {
-        return this.userService.findOne(id);
+    @Get('me')
+    findOne(@UserId() userId: number): Promise<ResponseUserDto> {
+        return this.userService.findOne(userId);
     }
 
-    @Patch(':id')
-    @UsePipes(new ZodValidationPipe(updateUserSchema))
+    @Patch()
     update(
-        @Param('id', ParseIntPipe) id: number,
-        @Body() updateUserDto: UpdateUserDto,
-    ) {
-        return this.userService.update(id, updateUserDto);
+        @UserId() userId: number,
+        @Body(new ZodValidationPipe(updateUserSchema))
+        updateUserDto: UpdateUserDto,
+    ): Promise<ResponseUserDto> {
+        return this.userService.update(userId, updateUserDto);
     }
 
-    @Delete(':id')
-    remove(@Param('id', ParseIntPipe) id: number) {
-        return this.userService.remove(id);
+    @Delete()
+    remove(@UserId() userId: number): Promise<ResponseUserDto> {
+        return this.userService.remove(userId);
     }
 }
